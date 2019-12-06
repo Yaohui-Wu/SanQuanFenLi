@@ -54,7 +54,7 @@ void JunTai(char *pucPassword)
 // get password length
     while(pucPassword[++ulPasswordLength]);
 
-// key table convert 8 * 32 = 256 bytes of data at a time in order to obtain the random number of "JunTai" distribution
+// key table convert 8 * 32 = 256 bytes of data at a time in order to generate the random number of "JunTai" distribution
     for(unsigned long i = 0; i < 32; ++i)
     {
         unsigned long *pulKeySwap1 = (unsigned long*)aucKeyTable, *pulKeySwap2 = (unsigned long*)aucKeyTable, ulKeyTemp, ulKeyIndex;
