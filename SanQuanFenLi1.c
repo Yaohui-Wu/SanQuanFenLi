@@ -1,7 +1,7 @@
 // Usage (encryption): SanQuanFenLi -C/-c plaintext.file ciphertext.file password
 // Usage (decryption): SanQuanFenLi -P/-p ciphertext.file plaintext.file password
 // Compiled on MacOS, Linux and *BSD.
-// Talk is so easy, show you my GOD. WOW!
+// Talk is SO EASY, show you my GOD. WOW!
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -46,7 +46,7 @@ unsigned int auiAvalancheTable[256] = {
 };
 
 // generate random number of "JunTai" distribution
-void JunTai(char *pucPassword)
+void JunTai(unsigned char *pucPassword)
 {
 // any password length
     unsigned long ulPasswordLength = -1;
@@ -71,7 +71,7 @@ void JunTai(char *pucPassword)
 
 void Encrypt(char *argv[])
 {
-    JunTai(argv[2]);
+    JunTai((unsigned char*)argv[2]);
 
     struct stat statFileSize;
 
@@ -128,7 +128,7 @@ void Encrypt(char *argv[])
 
 void Decrypt(char *argv[])
 {
-    JunTai(argv[2]);
+    JunTai((unsigned char*)argv[2]);
 
     struct stat statFileSize;
 
