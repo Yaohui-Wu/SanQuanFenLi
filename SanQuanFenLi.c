@@ -1,18 +1,19 @@
 // Usage (encryption): SanQuanFenLi -C/-c plaintext.file ciphertext.file password
 // Usage (decryption): SanQuanFenLi -P/-p ciphertext.file plaintext.file password
-// Compiled on MacOS, Linux and *BSD.
-// Talk is SO EASY, show you my GOD. WOW!
+// Compiled on MacOS, Linux and *BSD in X86_64 platform.
+// Talk is SO EASY, show you my GOD.
+// Simple is beautiful.
 
+#include <fcntl.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 // The data of 256 values of key table that you can set randomly,
 // yet you can freely to change to key table of 65536 values that you can set randomly,
 // you can also freely to change to key table of 4294967296 values that you can set randomly,
-// even if to change to key table of 18446744073709551616 values is no problem, which is only limited by the memory of your machine. WOW!
+// even if to change to key table of 18446744073709551616 values is no problem, which is only limited by the memory of your machine.
 unsigned char aucKeyTable[256] = {
     44, 34, 24, 14, 4, 42, 32, 22, 12, 2, 19, 7, 47, 17, 5, 43, 37, 29, 13, 3, 41, 31, 23, 11, 0, 1, 6, 8, 9, 10, 15, 16, 18, 20, 21, 25, 26, 27, 28, 30, 33, 35, 36, 38, 39, 40, 45, 46, 48, 49,
     94, 84, 74, 64, 54, 92, 82, 72, 62, 52, 79, 59, 97, 89, 73, 67, 53, 91, 83, 71, 61, 51, 50, 55, 56, 57, 58, 60, 63, 65, 66, 68, 69, 70, 75, 76, 77, 78, 80, 81, 85, 86, 87, 88, 90, 93, 95, 96, 98, 99,
@@ -23,9 +24,9 @@ unsigned char aucKeyTable[256] = {
 
 // The data of 256 values of avalanche table that you can set randomly.
 // The number of bytes of the value of the avalanche table can be larger with you, such as 8 bytes, 16 bytes, 32 bytes, and so on.
-// It can even be extended to infinity, which is just subject to your machine's memory. WOW!
+// It can even be extended to infinity, which is just subject to your machine's memory.
 // The capacity of avalanche tables can grow with you, such as 65536, 4294967296, 184467440737095516, etc.
-// It can even be extended to infinity, which is just subject to your machine's memory. WOW!
+// It can even be extended to infinity, which is just subject to your machine's memory.
 unsigned int auiAvalancheTable[256] = {
     0x46733436, 0x59763833, 0x50673432, 0x44623937, 0x41783435, 0x42663438, 0x43713135, 0x51743039, 0x4C7a3737, 0x577a3635, 0x58693139, 0x59753336, 0x46733733, 0x45683235, 0x42753730, 0x55743235,
     0x55643533, 0x47653334, 0x55623237, 0x50673036, 0x54653739, 0x42643331, 0x4E6c3738, 0x58633838, 0x56673733, 0x41763032, 0x4F633934, 0x4C613136, 0x456c3935, 0x566e3232, 0x4A713730, 0x49753538,
@@ -45,7 +46,7 @@ unsigned int auiAvalancheTable[256] = {
     0x44643938, 0x55663038, 0x45623338, 0x4F723835, 0x46653635, 0x4D6f3530, 0x496b3934, 0x44673331, 0x53703730, 0x45643832, 0x426d3635, 0x43663936, 0x45723234, 0x43753537, 0x47713130, 0x55713733
 };
 
-// generate random number of "JunTai" distribution
+// generate the random number of "JunTai"(like Shuffle) distribution
 void JunTai(unsigned char *pucPassword)
 {
 // any password length
@@ -75,20 +76,23 @@ void Encrypt(char *argv[])
 
     struct stat statFileSize;
 
-// get plaintext file size
     stat(argv[0], &statFileSize);
 
+// get plaintext file size
     unsigned long ulFileSize = statFileSize.st_size;
 
-// open plaintext file descriptor
-    int iPlaintextFD = open(argv[0], O_RDONLY, S_IRUSR | S_IWUSR);
-
+// allocate storage space
     unsigned char *pucCiphertext = (unsigned char*)malloc(ulFileSize);
 
-// read data from plaintext file
-    read(iPlaintextFD, pucCiphertext, ulFileSize);
+    unsigned int *puiCiphertext = (unsigned int*)malloc(4 * ulFileSize);
 
-    close(iPlaintextFD);
+// open plaintext file
+    int iPlaintext = open(argv[0], O_RDONLY, S_IRUSR | S_IWUSR);
+
+// read data from plaintext file
+    read(iPlaintext, pucCiphertext, ulFileSize);
+
+    close(iPlaintext);
 
 // process plaintext data if the plaintext size is greater than 256 bytes
     for(unsigned long k = ulFileSize / 256 * 256; 0 < k && k < ulFileSize; k -= 256)
@@ -105,21 +109,19 @@ void Encrypt(char *argv[])
         pucCiphertext[j] ^= aucKeyTable[j];
     }
 
-    unsigned int *puiCiphertext = (unsigned int*)malloc(4 * ulFileSize);
-
 // process avalanche
     for(unsigned long n = 0; n < ulFileSize; ++n)
     {
         puiCiphertext[n] = auiAvalancheTable[pucCiphertext[n]];
     }
     
-// open ciphertext file descriptor
-    int iCiphertextFD = open(argv[1], O_CREAT | O_WRONLY, S_IREAD | S_IWRITE);
+// open ciphertext file
+    int iCiphertext = open(argv[1], O_CREAT | O_WRONLY, S_IREAD | S_IWRITE);
 
 // write data to ciphertext file
-    write(iCiphertextFD, puiCiphertext, 4 * ulFileSize);
+    write(iCiphertext, puiCiphertext, 4 * ulFileSize);
 
-    close(iCiphertextFD);
+    close(iCiphertext);
 
     free(puiCiphertext);
 
@@ -132,20 +134,21 @@ void Decrypt(char *argv[])
 
     struct stat statFileSize;
 
-// get ciphertext file size
     stat(argv[0], &statFileSize);
 
+// get ciphertext file size
     unsigned long ulFileSize = statFileSize.st_size;
 
-// open ciphertext file descriptor
-    int iCiphertextFD = open(argv[0], O_RDONLY, S_IRUSR | S_IWUSR);
-
+// allocate storage space
     unsigned int *puiPlaintext = (unsigned int*)malloc(ulFileSize);
 
-// read data from ciphertext file
-    read(iCiphertextFD, puiPlaintext, ulFileSize);
+// open ciphertext file
+    int iCiphertext = open(argv[0], O_RDONLY, S_IRUSR | S_IWUSR);
 
-    close(iCiphertextFD);
+// read data from ciphertext file
+    read(iCiphertext, puiPlaintext, ulFileSize);
+
+    close(iCiphertext);
 
     ulFileSize /= 4;
 
@@ -183,12 +186,12 @@ void Decrypt(char *argv[])
     }
 
 // open plaintext file descriptor
-    int iPlaintextFD = open(argv[1], O_CREAT | O_WRONLY, S_IREAD | S_IWRITE);
+    int iPlaintext = open(argv[1], O_CREAT | O_WRONLY, S_IREAD | S_IWRITE);
 
 // write data to plaintext file
-    write(iPlaintextFD, pucPlaintext, ulFileSize);
+    write(iPlaintext, pucPlaintext, ulFileSize);
 
-    close(iPlaintextFD);
+    close(iPlaintext);
 
     free(pucPlaintext);
 }
